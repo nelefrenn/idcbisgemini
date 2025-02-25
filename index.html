@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente Virtual - IDCBIS</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            color: #0A3D91;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            max-width: 800px;
+            width: 90%;
+            padding: 40px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 20px;
+        }
+        h1 {
+            color: #0A3D91;
+            font-size: 32px;
+            text-align: center;
+            margin: 20px 0;
+        }
+        h2 {
+            font-size: 22px;
+            color: #333;
+            text-align: center;
+            margin: 10px 0 20px;
+        }
+        .notice {
+            background: #D4AF37;
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 18px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        #chat-container {
+            margin-top: 30px;
+            border: 2px solid #D4AF37;
+            padding: 20px;
+            border-radius: 10px;
+            background: #F5F5F5;
+            width: 100%;
+            min-height: 350px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        #chat-box {
+            width: 100%;
+            height: 250px;
+            overflow-y: auto;
+            border: 1px solid #ccc;
+            background: #fff;
+            padding: 10px;
+            text-align: left;
+            flex-grow: 1;
+        }
+        #chat-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+        }
+        #user-input {
+            width: 100%;
+            padding: 10px;
+        }
+        .button-group {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        #send-button, #copy-button, #clear-button {
+            padding: 10px;
+            background: #0A3D91;
+            color: white;
+            border: none;
+            cursor: pointer;
+            flex: 1;
+            margin: 0 5px;
+        }
+        #loader {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+        #loader img {
+            width: 80px;
+            height: 80px;
+            animation: fillColor 2s linear forwards;
+            filter: grayscale(100%);
+        }
+        @keyframes fillColor {
+            0% { filter: grayscale(100%); }
+            100% { filter: grayscale(0%); }
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 24px;
+            }
+            h2 {
+                font-size: 18px;
+            }
+            .notice {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <img src="logo.png" alt="IDCBIS Logo">
+        <h1>Bienvenido al Asistente Virtual del IDCBIS</h1>
+        <h2>Esta herramienta te permite encontrar información sobre documentos relacionados con la actividad laboral dentro del Instituto.</h2>
+        <div class="notice">
+            <p><strong>⚠ Versión en Desarrollo:</strong> Actualmente, el asistente solo puede proporcionar información sobre Fenotipado Seriado. Estamos trabajando para expandir su funcionalidad. ¡Gracias por tu paciencia! 😊</p>
+        </div>
+        <div id="chat-container">
+            <div id="chat-box"></div>
+            <div id="loader">
+                <img src="logo.png" alt="Cargando...">
+                <p>Procesando tu consulta, por favor espera...</p>
+            </div>
+            <div id="chat-controls">
+                <input type="text" id="user-input" placeholder="Escribe tu pregunta aquí...">
+                <div class="button-group">
+                    <button id="send-button">Enviar</button>
+                    <button id="copy-button">Copiar</button>
+                    <button id="clear-button">Borrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const frasesFinales = [
+            "¿En qué más puedo ayudarte hoy? Estoy aquí para ofrecerte la mejor información del IDCBIS.",
+            "Si necesitas más información, estaré encantado de asistirte.",
+            "No dudes en consultarme cualquier otra inquietud.",
+            "Estoy disponible para resolver más dudas. ¿Qué más necesitas saber?",
+            "Aquí para ayudarte. Pregunta lo que necesites.",
+            "Si requieres más detalles, dime en qué puedo colaborar contigo.",
+            "Tu conocimiento es nuestra prioridad. ¿Tienes más consultas?"
+        ];
+
+        document.getElementById("send-button").addEventListener("click", async function() {
+            let userInput = document.getElementById("user-input").value;
+            if (!userInput) return;
+
+            let chatBox = document.getElementById("chat-box");
+            chatBox.innerHTML += `<p><strong>Tú:</strong> ${userInput}</p>`;
+
+            let loader = document.getElementById("loader");
+            loader.style.display = "block";
+
+            let response = await fetch("https://chatbot-812437879168.us-central1.run.app/chat?pregunta=" + encodeURIComponent(userInput), {
+                method: "GET"
+            });
+
+            let result = await response.json();
+            loader.style.display = "none";
+
+            let fraseAleatoria = frasesFinales[Math.floor(Math.random() * frasesFinales.length)];
+            chatBox.innerHTML += `<p><strong>Asistente:</strong> ${result.respuesta}</p>`;
+            chatBox.innerHTML += `<p><em>${fraseAleatoria}</em></p>`;
+
+            document.getElementById("user-input").value = "";
+            chatBox.scrollTop = chatBox.scrollHeight;
+        });
+    </script>
+</body>
+</html>
+
+
